@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle & Average Time Calculation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef3f8;
+            color: #212529;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 70%;
+            margin: 20px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+        .fileGroup {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f1f3f5;
+            width: 100%;
+        }
+        select, input[type="file"], button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-size: 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        button {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #filesContainer {
+            max-width: 70%;
+            margin: 20px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 14px;
+            background-color: #ffffff;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #6c757d;
+            color: #f8f9fa;
+            border-bottom: 2px solid #adb5bd;
+        }
+        td {
+            background-color: #f8f9fa;
+        }
+        tbody tr:nth-child(odd) td {
+            background-color: #ffffff;
+        }
+        td.blank:empty::before {
+            content: "N/A";
+            color: inherit;
+        }
+        #spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #007bff;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        #chartContainer {
+            width: 80%;
+            margin-top: 20px;
+            position: relative;
+        }
+        .downloadIcon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            margin-left: 10px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+    </style>
+</head>
+<body>
+    <div id="spinner">Loading please wait...</div>
+    <div id="overlay"></div>
+    <div class="container">
+        <h1>Cycle & Average Time Calculation</h1>
+        <select id="productSelect">
+            <option value="" disabled selected>Select Product</option>
+            <option value="PG548">PG548</option>
+            <option value="Umbriel">Umbriel</option>
+            <option value="Vulcan FC2">Vulcan FC2</option>
+            <option value="Umbriel VikingFru">Umbriel VikingFru</option>
+            <option value="Viking">Viking</option>
+                        <option value="Gaines">Gaines</option>
+            <option value="Skywalker">Skywalker</option>
+        </select>
+        <button id="startProcessBtn">How many files.xlsx to process?</button>
+        <div id="filesContainer"></div>
+        <button id="calculateSummaryBtn" style="display: none;">Calculate/summary Testing Average</button>
+        <button id="downloadSummaryBtn" style="display: none;">Download Summary Data</button>
+
+        <div style="display: flex; align-items: center;">
+            <table id="summaryTable" style="display: none;">
+                <thead id="summaryTableHead"></thead>
+                <tbody id="summaryTableBody"></tbody>
+            </table>
+            <img id="downloadTableIcon" class="downloadIcon" src="https://img.icons8.com/ios/50/000000/download.png" alt="Download Table" style="display: none;">
+        </div>
+
+        <div style="display: flex; align-items: center;">
+            <table id="summaryTableMinutes" style="display: none;">
+                <thead id="summaryTableHeadMinutes"></thead>
+                <tbody id="summaryTableBodyMinutes"></tbody>
+            </table>
+            <img id="downloadTableIconMinutes" class="downloadIcon" src="https://img.icons8.com/ios/50/000000/download.png" alt="Download Table Minutes" style="display: none;">
+        </div>
+
+        <div id="chartContainer" style="display: none;">
+            <canvas id="averageTimeChart"></canvas>
+            <img id="downloadChartIcon" class="downloadIcon" src="https://img.icons8.com/ios/50/000000/download.png" alt="Download Chart" style="display: none;">
+        </div>
+
+        <div id="chartContainerMinutes" style="display: none;">
+            <canvas id="averageTimeChartMinutes"></canvas>
+          <!--   <img id="downloadChartIconMinutes" class="downloadIcon" src="https://img.icons8.com/ios/50/000000/download.png" alt="Download Chart Minutes" style="display: none;">  -->
+
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const stageOrders = {
+                "PG548": ["INIT", "PRE-CHECK", "AST", "FLA", "IOT", "FCT", "FC2", "IST", "FPF", "NVL"],
+                "Umbriel": ["INIT", "FLT", "FLA", "FLB", "FCT", "FLC", "FTS", "RIN", "DCC", "IOT"],
+                "Vulcan FC2": ["INIT", "FLT", "FLB", "FCT", "DCC", "DCT", "RIN", "EBT"],
+                "Umbriel VikingFru": ["VikingFruINIT", "INIT", "FLA", "FTS", "FCT", "FCT-1", "FCT1", "RIN", "DCC", "FCT-2", "FCT2"],
+                "Viking": ["INIT", "PT1", "PT2", "FLA", "FL1", "FLB", "FCT", "RIN", "DCC", "FIN", "INSTALLATION"],
+                                "Gaines": ["INIT", "FLA", "FLC", "FCT", "FINT", "RIN", "NVL", "INSTALLATION"],
+                                "Skywalker": ["INIT", "FLA", "FLB", "FLC", "FCT", "FINT", "NVL", "INSTALLATION"],
+            };
+
+            const worker = new Worker('fileworker.js');
+            let fileResults = [];
+            let chartInstance = null;
+            let chartInstanceMinutes = null;
+
+            worker.onmessage = function(event) {
+                const { fileName, summaryData, detailedData, error } = event.data;
+                if (error) {
+                    console.error(`Error processing ${fileName}: ${error}`);
+                } else {
+                    console.log(`Processing complete for: ${fileName}`, summaryData);
+                    fileResults.push({ fileName, summaryData, detailedData });
+                }
+                checkProcessingComplete();
+            };
+
+            document.getElementById("startProcessBtn").addEventListener("click", startProcess);
+            document.getElementById("calculateSummaryBtn").addEventListener("click", calculateSummaryAverage);
+            document.getElementById("downloadSummaryBtn").addEventListener("click", downloadSummaryData);
+            document.getElementById("downloadTableIcon").addEventListener("click", downloadTableAsImage);
+            document.getElementById("downloadTableIconMinutes").addEventListener("click", downloadTableAsImageMinutes);
+            document.getElementById("downloadChartIcon").addEventListener("click", downloadChartAsImage);
+            <!--  document.getElementById("downloadChartIconMinutes").addEventListener("click", downloadChartAsImageMinutes);  -->
+
+            function startProcess() {
+                const fileCount = parseInt(prompt("How many .xlsx files do you want to process?"), 10);
+                if (isNaN(fileCount) || fileCount <= 0) {
+                    alert("Please enter a valid positive number.");
+                    return;
+                }
+                resetState();
+                generateFileInputs(fileCount);
+            }
+
+            function generateFileInputs(count) {
+                const filesContainer = document.getElementById('filesContainer');
+                filesContainer.innerHTML = '';
+
+                for (let i = 0; i < count; i++) {
+                    const fileGroup = document.createElement('div');
+                    fileGroup.className = 'fileGroup';
+                    const fileInput = document.createElement('input');
+                    fileInput.setAttribute('type', 'file');
+                    fileInput.setAttribute('accept', '.xls,.xlsx');
+                    fileInput.addEventListener('change', checkAllFilesSelected);
+                    fileGroup.appendChild(fileInput);
+                    filesContainer.appendChild(fileGroup);
+                }
+            }
+
+            function resetState() {
+                document.getElementById('summaryTable').style.display = 'none';
+                document.getElementById('summaryTableMinutes').style.display = 'none';
+                document.getElementById('calculateSummaryBtn').style.display = 'none';
+                document.getElementById('downloadSummaryBtn').style.display = 'none';
+                document.getElementById('chartContainer').style.display = 'none';
+           <!-- document.getElementById('chartContainerMinutes').style.display = 'none'; -->
+                document.getElementById('filesContainer').innerHTML = '';
+                document.getElementById('downloadTableIcon').style.display = 'none';
+                document.getElementById('downloadTableIconMinutes').style.display = 'none';
+                document.getElementById('downloadChartIcon').style.display = 'none';
+           <!-- document.getElementById('downloadChartIconMinutes').style.display = 'none';  -->
+
+                if (chartInstance) {
+                    chartInstance.destroy();
+                    chartInstance = null;
+                }
+                if (chartInstanceMinutes) {
+                    chartInstanceMinutes.destroy();
+                    chartInstanceMinutes = null;
+                }
+                fileResults = [];
+                hideSpinner();
+            }
+
+            function checkAllFilesSelected() {
+                const fileGroups = document.querySelectorAll('.fileGroup input[type="file"]');
+                const allSelected = Array.from(fileGroups).every(input => input.files.length > 0);
+
+                if (allSelected) {
+                    document.getElementById('calculateSummaryBtn').style.display = 'block';
+                } else {
+                    document.getElementById('calculateSummaryBtn').style.display = 'none';
+                }
+            }
+
+            function calculateSummaryAverage() {
+                const productSelect = document.getElementById('productSelect');
+                const productType = productSelect.value;
+
+                if (!productType) {
+                    alert('Please select a product type.');
+                    return;
+                }
+
+                fileResults = [];
+                const fileGroups = document.querySelectorAll('.fileGroup');
+                showSpinner();
+
+                fileGroups.forEach(fileGroup => {
+                    const fileInput = fileGroup.querySelector('input[type="file"]');
+                    const file = fileInput.files[0];
+                    if (file) {
+                        worker.postMessage({ file, productType });
+                    }
+                });
+            }
+
+            function checkProcessingComplete() {
+                const fileGroups = document.querySelectorAll('.fileGroup');
+                if (fileResults.length === fileGroups.length) {
+                    hideSpinner();
+                    displaySummaryTablesAndCharts(document.getElementById('productSelect').value, fileResults);
+                    document.getElementById('downloadSummaryBtn').style.display = 'block';
+                }
+            }
+
+            function displaySummaryTablesAndCharts(productType, results) {
+                displaySummaryTable(productType, results);
+                displaySummaryTableMinutes(productType, results);
+                renderBarChart(productType, results);
+
+            }
+
+            function displaySummaryTable(productType, results) {
+                const thead = document.getElementById('summaryTableHead');
+                const stageOrder = getStageOrder(productType);
+                thead.innerHTML = '<th>SKU Name</th>' +
+                    stageOrder.map(stage => `<th>${stage}</th>`).join('') +
+                    '<th>Total Test Time</th>';
+
+                const tbody = document.getElementById('summaryTableBody');
+                tbody.innerHTML = '';
+
+                results.forEach(result => {
+                    result.summaryData.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${row.sku}</td>`;
+                        stageOrder.forEach(stage => {
+                            const stageTime = row[stage];
+                            tr.innerHTML += `<td class="${stageTime === null ? 'blank' : ''}">${stageTime || ''}</td>`;
+                        });
+                        tr.innerHTML += `<td>${row["Total"]}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                });
+
+                document.getElementById('summaryTable').style.display = 'table';
+                document.getElementById('downloadTableIcon').style.display = 'inline-block';
+            }
+
+                        function displaySummaryTableMinutes(productType, results) {
+                                const thead = document.getElementById('summaryTableHeadMinutes');
+                                const stageOrder = getStageOrder(productType);
+                                thead.innerHTML = '<th>SKU Name</th>' +
+                                        stageOrder.map(stage => `<th>${stage}</th>`).join('') +
+                                        '<th>Total Test Time (Minutes)</th>';
+
+                                const tbody = document.getElementById('summaryTableBodyMinutes');
+                                tbody.innerHTML = '';
+
+                                results.forEach(result => {
+                                        result.summaryData.forEach(row => {
+                                                const tr = document.createElement('tr');
+                                                let totalMinutes = 0;
+
+                                                tr.innerHTML = `<td>${row.sku}</td>`;
+                                                stageOrder.forEach(stage => {
+                                                        const stageTime = row[stage];
+                                                        const minutes = stageTime ? convertTimeToMinutes(stageTime) : 0;
+                                                        totalMinutes += minutes;
+                                                        tr.innerHTML += `<td>${stageTime === null ? 'N/A' : Math.round(minutes)}</td>`;
+                                                });
+
+                                                tr.innerHTML += `<td>${Math.round(totalMinutes)}</td>`;
+                                                tbody.appendChild(tr);
+                                        });
+                                });
+
+                                document.getElementById('summaryTableMinutes').style.display = 'table';
+                                document.getElementById('downloadTableIconMinutes').style.display = 'inline-block';
+                        }
+
+
+                                function downloadSummaryData() {
+                                        try {
+                                                const workbook = XLSX.utils.book_new();
+                                                const stageOrder = getStageOrder(document.getElementById('productSelect').value);
+
+                                                const summaryDataForExcel = fileResults.map(result =>
+                                                        result.summaryData.map(row => ({
+                                                                "SKU Name": row.sku,
+                                                                ...stageOrder.reduce((acc, stage) => {
+                                                                        acc[stage] = row[stage] !== null ? row[stage] : "N/A";
+                                                                        return acc;
+                                                                }, {}),
+                                                                "Total": row.Total || "N/A"
+                                                        }))
+                                                ).flat();
+
+                                                const summaryDataMinutesForExcel = fileResults.map(result =>
+                                                        result.summaryData.map(row => {
+                                                                const rowInMinutes = {
+                                                                        "SKU Name": row.sku
+                                                                };
+
+                                                                let totalMinutes = 0;
+                                                                stageOrder.forEach(stage => {
+                                                                        if (row[stage] !== null) {
+                                                                                const minutes = convertTimeToMinutes(row[stage]);
+                                                                                rowInMinutes[stage] = Math.round(minutes);
+                                                                                totalMinutes += Math.round(minutes);
+                                                                        } else {
+                                                                                rowInMinutes[stage] = "N/A";
+                                                                        }
+                                                                });
+
+                                                                // Add the total minutes at the end of the row
+                                                                rowInMinutes["Total Minutes"] = totalMinutes;
+                                                                return rowInMinutes;
+                                                        })
+                                                ).flat();
+
+                                                if (summaryDataForExcel.length === 0 && summaryDataMinutesForExcel.length === 0) {
+                                                        alert('There is no data to download.');
+                                                        return;
+                                                }
+
+                                                const summaryWorksheet = XLSX.utils.json_to_sheet(summaryDataForExcel);
+                                                const summaryMinutesWorksheet = XLSX.utils.json_to_sheet(summaryDataMinutesForExcel);
+
+                                                XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Summary Testing Average');
+                                                XLSX.utils.book_append_sheet(workbook, summaryMinutesWorksheet, 'Summary Minutes Only');
+
+                                                XLSX.writeFile(workbook, 'summary_data.xlsx');
+                                        } catch (error) {
+                                                console.error('Error during file download:', error);
+                                                alert('An error occurred while attempting to download the summary data.');
+                                        }
+                                }
+
+
+                        function convertTimeToMinutes(timeStr) {
+                                if (!timeStr) return 0;
+                                const parts = timeStr.split(':').map(Number);
+                                return (parts[0] * 60) + parts[1] + (parts[2] / 60);
+                        }
+
+
+            function getStageOrder(productType) {
+                return stageOrders[productType] || [];
+            }
+
+            function showSpinner() {
+                document.getElementById('spinner').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+            }
+
+            function hideSpinner() {
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('overlay').style.display = 'none';
+            }
+
+            function renderBarChart(productType, results) {
+                const ctx = document.getElementById('averageTimeChart').getContext('2d');
+                const stageOrder = getStageOrder(productType);
+
+                const labels = [];
+                const datasets = stageOrder.map(stage => ({ label: stage, data: [], backgroundColor: getRandomColor() }));
+
+                results.forEach(result => {
+                    result.summaryData.forEach(row => {
+                        labels.push(row.sku);
+                        stageOrder.forEach((stage, index) => {
+                            const stageTime = row[stage];
+                            if (stageTime) {
+                                datasets[index].data.push(convertTimeToMinutes(stageTime));
+                            } else {
+                                datasets[index].data.push(0);
+                            }
+                        });
+                    });
+                });
+
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Time (Minutes)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)} minutes`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                document.getElementById('chartContainer').style.display = 'block';
+                document.getElementById('downloadChartIcon').style.display = 'inline-block';
+            }
+
+
+            function getRandomColor() {
+                const r = Math.floor(Math.random() * 255);
+                const g = Math.floor(Math.random() * 255);
+                const b = Math.floor(Math.random() * 255);
+                return `rgba(${r},${g},${b},0.6)`;
+            }
+
+            function downloadTableAsImage() {
+                const summaryTable = document.getElementById('summaryTable');
+                html2canvas(summaryTable, { backgroundColor: null }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'summary_table.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            }
+
+            function downloadTableAsImageMinutes() {
+                const summaryTableMinutes = document.getElementById('summaryTableMinutes');
+                html2canvas(summaryTableMinutes, { backgroundColor: null }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'summary_table_minutes.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            }
+
+            function downloadChartAsImage() {
+                const link = document.createElement('a');
+                link.download = 'average_time_chart.png';
+                link.href = document.getElementById('averageTimeChart').toDataURL('image/png');
+                link.click();
+            }
+
+
+        });
+    </script>
+</body>
+</html>
