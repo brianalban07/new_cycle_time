@@ -312,21 +312,45 @@ function format(sec){
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
-calculateBtn.onclick=async function(){
+calculateBtn.onclick = async function(){
 
-  if(uploadedFiles.length===0)return;
+  // ✅ CHECK IF MODE SELECTED
+  if (!modeSelect.value) {
+    alert("Please select mode first.");
+    return;
+  }
 
+  // ✅ CHECK IF FILE INPUTS EXIST
+  if (uploadedFiles.length === 0) {
+    alert("Please choose file first.");
+    return;
+  }
+
+  // ✅ CHECK IF ALL FILES ARE SELECTED
+  const hasEmpty = uploadedFiles.some(f => !f);
+
+  if (hasEmpty) {
+    alert("Please select all required files before calculating.");
+    return;
+  }
+
+  // ✅ RESET PROGRESS BAR
+  progressBar.style.width = "0%";
+
+  // ✅ SHOW LOADING
   loadingOverlay.classList.add("show");
 
   let buffers=[];
 
   for(let i=0;i<uploadedFiles.length;i++){
     buffers.push(await uploadedFiles[i].arrayBuffer());
-    progressBar.style.width=((i+1)/uploadedFiles.length*100)+"%";
+
+    progressBar.style.width = ((i+1)/uploadedFiles.length * 100) + "%";
   }
 
   worker.postMessage({buffers});
 };
+
 
 worker.onmessage=function(e){
 
