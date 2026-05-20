@@ -11,19 +11,17 @@ self.onmessage = function(e) {
     const sheet = wb.Sheets[wb.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet);
 
-    let dur = {};
-    let cnt = {};
+    let dur={}, cnt={};
 
     json.forEach(r=>{
-      const s = r.Stage;
-      const st = new Date(r.StartTime);
-      const et = new Date(r.EndTime);
+      const s=r.Stage;
+      const st=new Date(r.StartTime);
+      const et=new Date(r.EndTime);
 
-      if (s && !isNaN(st) && !isNaN(et)){
-        const d = (et - st)/1000;
+      if(s && !isNaN(st) && !isNaN(et)){
+        const d=(et-st)/1000;
 
-        if (!dur[s]) { dur[s]=0; cnt[s]=0; }
-
+        if(!dur[s]){dur[s]=0;cnt[s]=0;}
         dur[s]+=d;
         cnt[s]++;
       }
