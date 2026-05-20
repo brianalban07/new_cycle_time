@@ -4,142 +4,175 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Cycle Time Analyzer</title>
+<title>Cycle Time Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {
-  font-family: 'Segoe UI', Arial;
-  background: #f4f6f9;
-  margin: 0;
+  margin:0;
+  font-family:Segoe UI;
+  display:flex;
 }
 
-.container {
-  max-width: 1000px;
-  margin: 40px auto;
-  background: #fff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+/* ✅ SIDEBAR */
+.sidebar {
+  width:220px;
+  background:#1e293b;
+  color:#fff;
+  height:100vh;
+  padding:20px;
 }
 
-h2 {
-  margin-bottom: 20px;
+.sidebar h2 {
+  font-size:18px;
 }
 
-.controls {
-  margin-bottom: 20px;
+/* ✅ MAIN */
+.main {
+  flex:1;
+  background:#f4f6f9;
+  padding:20px;
 }
 
-select, input {
-  padding: 8px;
-  margin: 5px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+/* ✅ CARD */
+.card {
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
 }
 
+/* DARK MODE */
+.dark body { background:#111; }
+.dark .main { background:#111; }
+.dark .card { background:#1f2937; color:#fff; }
+.dark table { color:#fff; }
+
+/* BUTTON */
 button {
-  padding: 10px 20px;
-  background: #0078d4;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+  padding:8px 15px;
+  background:#0078d4;
+  color:white;
+  border:none;
+  border-radius:5px;
+  margin-top:10px;
 }
 
-button:hover {
-  background: #005ea6;
+/* PROGRESS BAR */
+.progress {
+  width:100%;
+  background:#ccc;
+  height:10px;
+  border-radius:5px;
+  margin-top:10px;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+.progress-bar {
+  width:0%;
+  height:100%;
+  background:#28a745;
+  border-radius:5px;
 }
 
-th {
-  background: #3f4a5a;
-  color: white;
-  padding: 8px;
-}
+/* TABLE */
+table { width:100%; border-collapse:collapse; }
+th,td { border:1px solid #ddd; padding:6px; text-align:center; }
+th { background:#333; color:white; }
 
-td {
-  border: 1px solid #ddd;
-  padding: 6px;
-  text-align: center;
-}
-
-.week { background: #ffd966; font-weight: bold; }
-.total { background: #28a745; color: white; font-weight: bold; }
-
-.hidden { display: none; }
+.week { background:#ffd966; }
+.total { background:#28a745; color:white; }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h2>Cycle Time Analyzer</h2>
+<!-- ✅ SIDEBAR -->
+<div class="sidebar">
+  <h2>Dashboard</h2>
 
-  <div class="controls">
-    <select id="modeSelect">
-      <option value="">Select Mode</option>
-      <option value="single">Single Week</option>
-      <option value="multiple">Multiple Weeks</option>
-    </select>
+  <button onclick="toggleDark()">🌙 Dark Mode</button>
+  <button onclick="exportExcel()">⬇ Export Excel</button>
+</div>
 
-    <input type="number" id="weekCount" class="hidden" placeholder="No. of Weeks">
-  </div>
+<!-- ✅ MAIN -->
+<div class="main">
 
-  <div id="fileContainer"></div>
+<div class="card">
+<h2>Cycle Time Analyzer</h2>
 
-  <button id="calculateBtn" class="hidden">Calculate</button>
+<select id="modeSelect">
+  <option value="">Select Mode</option>
+  <option value="single">Single</option>
+  <option value="multiple">Multiple</option>
+</select>
 
-  <table>
-    <thead><tr id="headerRow"></tr></thead>
-    <tbody id="bodyRow"></tbody>
-  </table>
+<input type="number" id="weekCount" placeholder="Weeks">
+
+<div id="fileContainer"></div>
+
+<button id="calculateBtn">Calculate</button>
+
+<div class="progress">
+  <div id="progressBar" class="progress-bar"></div>
+</div>
+
+</div>
+
+<div class="card">
+<h3>Chart</h3>
+<canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+<table>
+<thead><tr id="headerRow"></tr></thead>
+<tbody id="bodyRow"></tbody>
+</table>
+</div>
+
 </div>
 
 <script>
 const stageOrder = ["INIT","AST","FLA","IOT","FCT","FC2","IST","FPF","NVL"];
 
 let uploadedFiles = [];
-let worker = new Worker('fileWorker.js');
+let worker = new Worker('./fileWorker.js');
+let isSingle = false;
 
-// ✅ MODE
-modeSelect.onchange = function() {
-  uploadedFiles = [];
-  fileContainer.innerHTML = '';
-  bodyRow.innerHTML = '';
-  calculateBtn.classList.add("hidden");
+// ✅ DARK MODE
+function toggleDark(){
+  document.body.classList.toggle("dark");
+}
 
-  if (this.value === "multiple") {
-    weekCount.classList.remove("hidden");
-  } else {
-    weekCount.classList.add("hidden");
+// ✅ INPUTS
+modeSelect.onchange = function(){
+  fileContainer.innerHTML='';
+  uploadedFiles=[];
+
+  if(this.value==="single"){
+    isSingle=true;
     createInputs(1);
+  } else {
+    isSingle=false;
   }
 };
 
-// ✅ INPUTS
-weekCount.onchange = function() {
+weekCount.onchange = function(){
   createInputs(parseInt(this.value));
 };
 
-function createInputs(count) {
-  fileContainer.innerHTML = '';
-  uploadedFiles = new Array(count).fill(null);
+function createInputs(count){
+  fileContainer.innerHTML='';
+  uploadedFiles=new Array(count).fill(null);
 
-  for (let i=0;i<count;i++) {
-    let div = document.createElement('div');
+  for(let i=0;i<count;i++){
+    let div=document.createElement('div');
+    div.innerHTML=`Week ${i+1}: <input type="file">`;
 
-    div.innerHTML = `Week ${i+1}: <input type="file" data-i="${i}">`;
-
-    div.querySelector('input').onchange = e => {
-      uploadedFiles[i] = e.target.files[0];
-      if (uploadedFiles.every(f=>f)) calculateBtn.classList.remove("hidden");
+    div.querySelector('input').onchange=e=>{
+      uploadedFiles[i]=e.target.files[0];
     };
 
     fileContainer.appendChild(div);
@@ -147,96 +180,87 @@ function createInputs(count) {
 }
 
 // ✅ HEADER
-function createHeader() {
-  headerRow.innerHTML = "<th>Week</th>";
+function createHeader(){
+  headerRow.innerHTML='';
+  if(!isSingle) headerRow.innerHTML+='<th>Week</th>';
   stageOrder.forEach(s=>headerRow.innerHTML+=`<th>${s}</th>`);
-  headerRow.innerHTML += "<th>TOTAL</th>";
+  headerRow.innerHTML+='<th>TOTAL</th>';
 }
 
 // ✅ FORMAT
 function format(sec){
-  const h = String(Math.floor(sec/3600)).padStart(2,'0');
-  const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
-  const s = String(Math.floor(sec%60)).padStart(2,'0');
-  return `${h}:${m}:${s}`;
+  let h=Math.floor(sec/3600);
+  let m=Math.floor((sec%3600)/60);
+  let s=Math.floor(sec%60);
+  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
-// ✅ RECEIVE FROM WORKER
-worker.onmessage = function(e) {
-  const {results} = e.data;
-
-  bodyRow.innerHTML = '';
-  createHeader();
-
-  let allWeekResults = [];
-
-  results.forEach((res, i)=> {
-
-    let total = 0;
-    let row = `<tr><td class="week">${i+1}</td>`;
-
-    let avgObj = {};
-
-    stageOrder.forEach(s=>{
-      const avg = res.dur[s] ? res.dur[s]/res.cnt[s] : 0;
-
-      if (avg>0){
-        total += avg;
-        row += `<td>${format(avg)}</td>`;
-      } else row += `<td>N/A</td>`;
-
-      avgObj[s] = avg;
-    });
-
-    row += `<td class="total">${format(total)}</td></tr>`;
-
-    bodyRow.innerHTML += row;
-    allWeekResults.push(avgObj);
-  });
-
-  // ✅ ONLY SHOW "ALL FILES" IF MULTIPLE
-  if (results.length > 1) {
-    addAverageRow(allWeekResults);
-  }
-};
-
-// ✅ FINAL ROW
-function addAverageRow(allResults) {
-  let row = `<tr><td class="week">All Files</td>`;
-  let total = 0;
-
-  stageOrder.forEach(stage=>{
-    let sum=0, count=0;
-
-    allResults.forEach(w=>{
-      if (w[stage]>0){
-        sum+=w[stage];
-        count++;
-      }
-    });
-
-    const avg = count? sum/count : 0;
-
-    if (avg>0){
-      total+=avg;
-      row+=`<td>${format(avg)}</td>`;
-    } else row+=`<td>N/A</td>`;
-  });
-
-  row+=`<td class="total">${format(total)}</td></tr>`;
-  bodyRow.innerHTML += row;
-}
-
-// ✅ SEND TO WORKER
+// ✅ PROCESS
 calculateBtn.onclick = async function(){
-  let buffers = [];
 
-  for (let file of uploadedFiles) {
-    buffers.push(await file.arrayBuffer());
+  let buffers=[];
+  let progress=0;
+
+  for(let i=0;i<uploadedFiles.length;i++){
+    buffers.push(await uploadedFiles[i].arrayBuffer());
+
+    progress = ((i+1)/uploadedFiles.length)*100;
+    progressBar.style.width = progress + "%";
   }
 
   worker.postMessage({buffers});
 };
+
+// ✅ RECEIVE
+worker.onmessage=function(e){
+
+  const {results}=e.data;
+
+  bodyRow.innerHTML='';
+  createHeader();
+
+  let chartData = [];
+
+  results.forEach((r,i)=>{
+    let total=0;
+    let row="<tr>";
+
+    if(!isSingle) row+=`<td class="week">${i+1}</td>`;
+
+    stageOrder.forEach(s=>{
+      let avg=r.dur[s]?r.dur[s]/r.cnt[s]:0;
+      total+=avg;
+      row+=`<td>${format(avg)}</td>`;
+      chartData.push(avg);
+    });
+
+    row+=`<td class="total">${format(total)}</td></tr>`;
+    bodyRow.innerHTML+=row;
+  });
+
+  drawChart(chartData);
+};
+
+// ✅ CHART
+function drawChart(data){
+  new Chart(document.getElementById('chart'), {
+    type:'bar',
+    data:{
+      labels: stageOrder,
+      datasets:[{
+        label:'Avg Time',
+        data:data.slice(0,stageOrder.length),
+        backgroundColor:'#0078d4'
+      }]
+    }
+  });
+}
+
+// ✅ EXPORT
+function exportExcel(){
+  let wb = XLSX.utils.table_to_book(document.querySelector("table"));
+  XLSX.writeFile(wb, "CycleTime.xlsx");
+}
 </script>
 
 </body>
