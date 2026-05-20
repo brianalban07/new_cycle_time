@@ -52,6 +52,9 @@ body{
   overflow-x:auto;
 }
 
+/* ✅ HIDDEN */
+.hidden{display:none;}
+
 /* ✅ CONTROLS */
 .controls{
   display:flex;
@@ -133,7 +136,7 @@ th{background:#333;color:#fff;}
 
 @keyframes spin{100%{transform:rotate(360deg);}}
 
-/* ✅ RESPONSIVE */
+/* ✅ Responsive */
 @media(max-width:900px){
   body{flex-direction:column;}
   .sidebar{width:100%;height:auto;}
@@ -147,13 +150,14 @@ th{background:#333;color:#fff;}
 <!-- ✅ SIDEBAR -->
 <div class="sidebar">
   <h2>Dashboard</h2>
-  <button onclick="exportExcel()">Export Excel</button>
+  <button onclick="exportExcel()">Export</button>
 </div>
 
 <!-- ✅ MAIN -->
 <div class="main">
 <div class="content">
 
+<!-- ✅ FORM -->
 <div class="card">
 <h2>Cycle Time Analyzer</h2>
 
@@ -164,7 +168,8 @@ th{background:#333;color:#fff;}
     <option value="multiple">Multiple</option>
   </select>
 
-  <input type="number" id="weekCount" placeholder="No. of Weeks">
+  <!-- ✅ Hidden initially -->
+  <input type="number" id="weekCount" class="hidden" placeholder="No. of Weeks">
 </div>
 
 <div id="fileContainer"></div>
@@ -177,11 +182,13 @@ th{background:#333;color:#fff;}
 
 </div>
 
-<div class="card">
+<!-- ✅ CHART (HIDDEN FIRST) -->
+<div id="chartCard" class="card hidden">
 <h3>Stage Trend</h3>
 <canvas id="chart"></canvas>
 </div>
 
+<!-- ✅ TABLE -->
 <div class="card">
 <table>
 <thead><tr id="headerRow"></tr></thead>
@@ -206,19 +213,23 @@ let uploadedFiles=[];
 let worker=new Worker('./fileWorker.js');
 let isSingle=false;
 
-// ✅ INPUT MODE
+// ✅ MODE CHANGE
 modeSelect.onchange=function(){
+
   fileContainer.innerHTML='';
   uploadedFiles=[];
 
   if(this.value==="single"){
     isSingle=true;
-    createInputs(1,true); // ✅ no Week label
-  }else{
+    weekCount.classList.add("hidden"); ✅ hide
+    createInputs(1,true);
+  }else if(this.value==="multiple"){
     isSingle=false;
+    weekCount.classList.remove("hidden"); ✅ show
   }
 };
 
+// CREATE INPUTS
 weekCount.onchange=function(){
   createInputs(parseInt(this.value),false);
 };
@@ -230,7 +241,6 @@ function createInputs(count,isSingleMode=false){
   for(let i=0;i<count;i++){
     let div=document.createElement('div');
 
-    // ✅ FIX: remove "Week" word in single mode
     if(isSingleMode){
       div.innerHTML=`<input type="file">`;
     }else{
@@ -245,31 +255,23 @@ function createInputs(count,isSingleMode=false){
   }
 }
 
-// ✅ HEADER
+// HEADER
 function createHeader(){
   headerRow.innerHTML='';
-
-  if(!isSingle){
-    headerRow.innerHTML+='<th>Week</th>';
-  }
-
-  stageOrder.forEach(s=>{
-    headerRow.innerHTML+=`<th>${s}</th>`;
-  });
-
+  if(!isSingle) headerRow.innerHTML+='<th>Week</th>';
+  stageOrder.forEach(s=>headerRow.innerHTML+=`<th>${s}</th>`);
   headerRow.innerHTML+='<th>TOTAL</th>';
 }
 
-// ✅ FORMAT
+// FORMAT
 function format(sec){
   let h=Math.floor(sec/3600);
   let m=Math.floor((sec%3600)/60);
   let s=Math.floor(sec%60);
-
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
-// ✅ CALCULATE
+// CALCULATE
 calculateBtn.onclick=async function(){
 
   if(uploadedFiles.length===0)return;
@@ -280,15 +282,13 @@ calculateBtn.onclick=async function(){
 
   for(let i=0;i<uploadedFiles.length;i++){
     buffers.push(await uploadedFiles[i].arrayBuffer());
-
-    let p=((i+1)/uploadedFiles.length)*100;
-    progressBar.style.width=p+"%";
+    progressBar.style.width=((i+1)/uploadedFiles.length*100)+"%";
   }
 
   worker.postMessage({buffers});
 };
 
-// ✅ RECEIVE
+// RECEIVE
 worker.onmessage=function(e){
 
   loadingOverlay.classList.remove("show");
@@ -332,7 +332,10 @@ worker.onmessage=function(e){
     all.push(weekAvg);
   });
 
-  // ✅ ADD ALL FILES ROW
+  // ✅ show chart after compute
+  chartCard.classList.remove("hidden");
+
+  // ✅ ALL FILES ROW
   if(!isSingle && results.length>1){
     addAverageRow(all);
   }
@@ -340,14 +343,12 @@ worker.onmessage=function(e){
   drawChart(chartData);
 };
 
-// ✅ ALL FILES ROW
+// AVERAGE ROW
 function addAverageRow(all){
-
   let row="<tr><td class='week'>All Files</td>";
   let total=0;
 
   stageOrder.forEach(stage=>{
-
     let sum=0,count=0;
 
     all.forEach(w=>{
@@ -371,7 +372,7 @@ function addAverageRow(all){
   bodyRow.innerHTML+=row;
 }
 
-// ✅ CHART
+// CHART
 function drawChart(data){
 
   new Chart(document.getElementById('chart'),{
@@ -387,7 +388,7 @@ function drawChart(data){
   });
 }
 
-// ✅ EXPORT
+// EXPORT
 function exportExcel(){
   let wb=XLSX.utils.table_to_book(document.querySelector("table"));
   XLSX.writeFile(wb,"CycleTime.xlsx");
