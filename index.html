@@ -19,7 +19,6 @@ body{
   background:#f4f6f9;
 }
 
-/* ✅ SIDEBAR */
 .sidebar{
   width:230px;
   background:#1e293b;
@@ -28,11 +27,6 @@ body{
   min-height:100vh;
 }
 
-.sidebar h2{
-  margin-bottom:20px;
-}
-
-/* ✅ MAIN CENTER */
 .main{
   flex:1;
   display:flex;
@@ -45,7 +39,6 @@ body{
   padding:30px;
 }
 
-/* ✅ CARD LAYOUT */
 .card{
   background:#fff;
   padding:20px;
@@ -54,53 +47,31 @@ body{
   box-shadow:0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* ✅ TITLE SPACING */
-h2,h3{
-  margin-top:0;
-  margin-bottom:15px;
-}
-
-/* ✅ CONTROLS */
 .controls{
   display:flex;
   gap:15px;
   flex-wrap:wrap;
-  margin-bottom:10px;
 }
 
 select,input{
   padding:10px;
-  border-radius:6px;
-  border:1px solid #ccc;
 }
 
-/* ✅ BUTTON */
 button{
   padding:10px 18px;
   background:#0078d4;
   color:#fff;
   border:none;
   border-radius:6px;
-  cursor:pointer;
-  margin-top:10px;
 }
 
-button:hover{
-  background:#005ea6;
-}
+#fileContainer div{margin-bottom:8px;}
 
-/* ✅ UPLOAD AREA SPACING */
-#fileContainer div{
-  margin-bottom:8px;
-}
-
-/* ✅ PROGRESS */
 .progress{
   width:100%;
   height:8px;
   background:#ddd;
   border-radius:5px;
-  margin-top:10px;
 }
 
 .progress-bar{
@@ -109,10 +80,7 @@ button:hover{
   background:#28a745;
 }
 
-/* ✅ TABLE */
-.table-container{
-  overflow-x:auto;
-}
+.table-container{overflow-x:auto;}
 
 table{
   width:100%;
@@ -126,25 +94,17 @@ th,td{
   text-align:center;
 }
 
-th{
-  background:#333;
-  color:#fff;
-}
-
+th{background:#333;color:#fff;}
 .week{ background:#ffd966; }
 .total{ background:#28a745; color:#fff; }
 
-/* ✅ CHART FIXED SIZE */
 .chart-wrapper{
-  width:100%;
   max-width:600px;
   margin:auto;
 }
 
-/* ✅ HIDDEN */
-.hidden{ display:none; }
+.hidden{display:none;}
 
-/* ✅ LOADING */
 #loadingOverlay{
   position:fixed;
   top:0;left:0;
@@ -168,27 +128,7 @@ th{
   animation:spin 1s linear infinite;
 }
 
-@keyframes spin{
-  100%{transform:rotate(360deg);}
-}
-
-/* ✅ RESPONSIVE */
-@media(max-width:900px){
-  body{ flex-direction:column; }
-
-  .sidebar{
-    width:100%;
-    text-align:center;
-  }
-
-  .content{
-    padding:20px;
-  }
-
-  table{
-    min-width:700px;
-  }
-}
+@keyframes spin{100%{transform:rotate(360deg);}}
 </style>
 </head>
 
@@ -202,65 +142,63 @@ th{
 <div class="main">
 <div class="content">
 
-<!-- FORM -->
 <div class="card">
-  <h2>Cycle Time Analyzer</h2>
+<h2>Cycle Time Analyzer</h2>
 
-  <div class="controls">
-    <select id="modeSelect">
-      <option value="">Select Mode</option>
-      <option value="single">Single</option>
-      <option value="multiple">Multiple</option>
-    </select>
+<div class="controls">
+<select id="modeSelect">
+  <option value="">Select Mode</option>
+  <option value="single">Single</option>
+  <option value="multiple">Multiple</option>
+</select>
 
-    <input type="number" id="weekCount" class="hidden" placeholder="No. of Weeks">
-  </div>
-
-  <div id="fileContainer"></div>
-
-  <button id="calculateBtn">Calculate</button>
-
-  <div class="progress">
-    <div id="progressBar" class="progress-bar"></div>
-  </div>
+<input type="number" id="weekCount" class="hidden" placeholder="No. of Weeks">
 </div>
 
-<!-- CHART -->
+<div id="fileContainer"></div>
+
+<button id="calculateBtn">Calculate</button>
+
+<div class="progress">
+<div id="progressBar" class="progress-bar"></div>
+</div>
+</div>
+
 <div id="chartCard" class="card hidden">
-  <h3 style="text-align:center;">Stage Trend</h3>
-
-  <div class="chart-wrapper">
-    <canvas id="chart"></canvas>
-  </div>
+<h3 style="text-align:center;">Stage Trend</h3>
+<div class="chart-wrapper">
+<canvas id="chart"></canvas>
+</div>
 </div>
 
-<!-- TABLE -->
 <div class="card">
-  <div class="table-container">
-    <table>
-      <thead><tr id="headerRow"></tr></thead>
-      <tbody id="bodyRow"></tbody>
-    </table>
-  </div>
-</div>
-
+<div class="table-container">
+<table>
+<thead><tr id="headerRow"></tr></thead>
+<tbody id="bodyRow"></tbody>
+</table>
 </div>
 </div>
 
-<!-- LOADING -->
+</div>
+</div>
+
 <div id="loadingOverlay">
-  <div class="spinner"></div>
-  <div>Processing... please wait</div>
+<div class="spinner"></div>
+<div>Processing... please wait</div>
 </div>
 
 <script>
 
-const stageOrder=["INIT","AST","FLA","IOT","FCT","FC2","IST","FPF","NVL"];
+// ✅ BASE ORDER
+const baseOrder=["INIT","PRE-CHECK","AST","FLA","IOT","FCT","FC2","IST","FPF","NVL"];
+let stageOrder=[];
 
 let uploadedFiles=[];
 let worker=new Worker('./fileWorker.js');
 let isSingle=false;
 
+// MODE
 modeSelect.onchange=function(){
   fileContainer.innerHTML='';
   uploadedFiles=[];
@@ -298,6 +236,7 @@ function createInputs(count,isSingleMode=false){
   }
 }
 
+// HEADER
 function createHeader(){
   headerRow.innerHTML='';
   if(!isSingle) headerRow.innerHTML+='<th>Week</th>';
@@ -305,6 +244,7 @@ function createHeader(){
   headerRow.innerHTML+='<th>TOTAL</th>';
 }
 
+// FORMAT
 function format(sec){
   let h=Math.floor(sec/3600);
   let m=Math.floor((sec%3600)/60);
@@ -312,46 +252,38 @@ function format(sec){
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
+// ✅ CALCULATE (FIXED BUG)
 calculateBtn.onclick = async function(){
 
-  // ✅ CHECK IF MODE SELECTED
   if (!modeSelect.value) {
     alert("Please select mode first.");
     return;
   }
 
-  // ✅ CHECK IF FILE INPUTS EXIST
   if (uploadedFiles.length === 0) {
     alert("Please choose file first.");
     return;
   }
 
-  // ✅ CHECK IF ALL FILES ARE SELECTED
-  const hasEmpty = uploadedFiles.some(f => !f);
-
-  if (hasEmpty) {
-    alert("Please select all required files before calculating.");
+  if (uploadedFiles.some(f=>!f)) {
+    alert("Please select all required files.");
     return;
   }
 
-  // ✅ RESET PROGRESS BAR
-  progressBar.style.width = "0%";
-
-  // ✅ SHOW LOADING
+  progressBar.style.width="0%";
   loadingOverlay.classList.add("show");
 
   let buffers=[];
 
   for(let i=0;i<uploadedFiles.length;i++){
     buffers.push(await uploadedFiles[i].arrayBuffer());
-
-    progressBar.style.width = ((i+1)/uploadedFiles.length * 100) + "%";
+    progressBar.style.width=((i+1)/uploadedFiles.length*100)+"%";
   }
 
   worker.postMessage({buffers});
 };
 
-
+// ✅ RECEIVE
 worker.onmessage=function(e){
 
   loadingOverlay.classList.remove("show");
@@ -359,6 +291,15 @@ worker.onmessage=function(e){
   const {results}=e.data;
 
   bodyRow.innerHTML='';
+
+  // ✅ DETECT STAGES
+  let detected=new Set();
+  results.forEach(r=>{
+    Object.keys(r.dur).forEach(s=>detected.add(s));
+  });
+
+  stageOrder = baseOrder.filter(s=>detected.has(s));
+
   createHeader();
 
   let chartData=[];
@@ -431,6 +372,7 @@ function addAverageRow(all){
   bodyRow.innerHTML+=row;
 }
 
+// CHART
 function drawChart(data){
   new Chart(document.getElementById('chart'),{
     type:'bar',
@@ -441,14 +383,11 @@ function drawChart(data){
         data:data.slice(0,stageOrder.length),
         backgroundColor:'#0078d4'
       }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false
     }
   });
 }
 
+// EXPORT
 function exportExcel(){
   let wb=XLSX.utils.table_to_book(document.querySelector("table"));
   XLSX.writeFile(wb,"CycleTime.xlsx");
