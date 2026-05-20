@@ -10,159 +10,134 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-* { box-sizing: border-box; }
+*{box-sizing:border-box;}
 
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Arial;
-  display: flex;
-  background: #f4f6f9;
+body{
+  margin:0;
+  font-family:Segoe UI;
+  display:flex;
+  background:#f4f6f9;
 }
 
 /* ✅ SIDEBAR */
-.sidebar {
-  width: 240px;
-  min-width: 220px;
-  background: #1e293b;
-  color: #fff;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-  padding: 20px;
+.sidebar{
+  width:230px;
+  background:#1e293b;
+  color:#fff;
+  height:100vh;
+  padding:20px;
 }
 
-.sidebar h2 { margin-bottom: 20px; }
+.sidebar h2{margin-bottom:20px;}
 
-/* ✅ MAIN CENTER */
-.main {
-  flex: 1;
-  display: flex;
-  justify-content: center;
+/* ✅ MAIN */
+.main{
+  flex:1;
+  display:flex;
+  justify-content:center;
 }
 
-.content {
-  width: 100%;
-  max-width: 1100px;
-  padding: 20px;
+.content{
+  width:100%;
+  max-width:1100px;
+  padding:20px;
 }
 
 /* ✅ CARD */
-.card {
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  overflow-x: auto;
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+  overflow-x:auto;
 }
 
 /* ✅ CONTROLS */
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.controls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
-select, input {
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+select,input{
+  padding:8px;
+  border-radius:5px;
+  border:1px solid #ccc;
 }
 
 /* ✅ BUTTON */
-button {
-  padding: 10px 18px;
-  background: #0078d4;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+button{
+  padding:10px 18px;
+  background:#0078d4;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
 }
-
-button:hover { background: #005ea6; }
 
 /* ✅ TABLE */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 900px;
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:900px;
 }
 
-th, td {
-  border: 1px solid #ddd;
-  padding: 6px;
-  text-align: center;
+th,td{
+  border:1px solid #ddd;
+  padding:6px;
+  text-align:center;
 }
 
-th { background: #333; color: #fff; }
-
-.week { background: #ffd966; }
-.total { background: #28a745; color: white; }
+th{background:#333;color:#fff;}
+.week{background:#ffd966;}
+.total{background:#28a745;color:#fff;}
 
 /* ✅ PROGRESS */
-.progress {
-  width: 100%;
-  height: 10px;
-  background: #ccc;
-  border-radius: 5px;
-  overflow: hidden;
-  margin-top: 10px;
+.progress{
+  width:100%;
+  height:10px;
+  background:#ccc;
+  border-radius:5px;
+  margin-top:10px;
 }
 
-.progress-bar {
-  height: 100%;
-  width: 0%;
-  background: #28a745;
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:#28a745;
 }
-
-/* ✅ CHART */
-canvas { max-width: 100%; }
 
 /* ✅ LOADING */
-#loadingOverlay {
-  position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background: rgba(0,0,0,0.6);
+#loadingOverlay{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.6);
+  display:none;
   justify-content:center;
   align-items:center;
   flex-direction:column;
   color:#fff;
-  display:none;
 }
 
-#loadingOverlay.show { display:flex; }
+#loadingOverlay.show{display:flex;}
 
-.spinner {
+.spinner{
   border:5px solid #ccc;
   border-top:5px solid #0078d4;
   border-radius:50%;
   width:50px;
   height:50px;
-  animation: spin 1s linear infinite;
+  animation:spin 1s linear infinite;
 }
 
-@keyframes spin {
-  100% { transform: rotate(360deg); }
-}
-
-/* ✅ DARK MODE */
-.dark body { background:#111; }
-.dark .main { background:#111; }
-.dark .card { background:#1f2937; color:#fff; }
+@keyframes spin{100%{transform:rotate(360deg);}}
 
 /* ✅ RESPONSIVE */
-@media (max-width:900px) {
-  body { flex-direction: column; }
-
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-  }
-
-  .main { width: 100%; }
-
-  table { min-width: 700px; }
+@media(max-width:900px){
+  body{flex-direction:column;}
+  .sidebar{width:100%;height:auto;}
+  table{min-width:700px;}
 }
 </style>
 </head>
@@ -172,27 +147,24 @@ canvas { max-width: 100%; }
 <!-- ✅ SIDEBAR -->
 <div class="sidebar">
   <h2>Dashboard</h2>
-
-  <button onclick="toggleDark()">🌙 Dark Mode</button><br><br>
-  <button onclick="exportExcel()">⬇ Export</button>
+  <button onclick="exportExcel()">Export Excel</button>
 </div>
 
 <!-- ✅ MAIN -->
 <div class="main">
 <div class="content">
 
-<!-- FORM -->
 <div class="card">
 <h2>Cycle Time Analyzer</h2>
 
 <div class="controls">
-<select id="modeSelect">
-  <option value="">Select Mode</option>
-  <option value="single">Single</option>
-  <option value="multiple">Multiple</option>
-</select>
+  <select id="modeSelect">
+    <option value="">Select Mode</option>
+    <option value="single">Single</option>
+    <option value="multiple">Multiple</option>
+  </select>
 
-<input type="number" id="weekCount" placeholder="Weeks">
+  <input type="number" id="weekCount" placeholder="No. of Weeks">
 </div>
 
 <div id="fileContainer"></div>
@@ -205,13 +177,11 @@ canvas { max-width: 100%; }
 
 </div>
 
-<!-- CHART -->
 <div class="card">
 <h3>Stage Trend</h3>
 <canvas id="chart"></canvas>
 </div>
 
-<!-- TABLE -->
 <div class="card">
 <table>
 <thead><tr id="headerRow"></tr></thead>
@@ -230,41 +200,42 @@ canvas { max-width: 100%; }
 
 <script>
 
-const stageOrder = ["INIT","AST","FLA","IOT","FCT","FC2","IST","FPF","NVL"];
+const stageOrder=["INIT","AST","FLA","IOT","FCT","FC2","IST","FPF","NVL"];
 
-let uploadedFiles = [];
-let worker = new Worker('./fileWorker.js');
-let isSingle = false;
+let uploadedFiles=[];
+let worker=new Worker('./fileWorker.js');
+let isSingle=false;
 
-// DARK MODE
-function toggleDark(){
-  document.body.classList.toggle("dark");
-}
-
-// INPUTS
-modeSelect.onchange = function(){
+// ✅ INPUT MODE
+modeSelect.onchange=function(){
   fileContainer.innerHTML='';
   uploadedFiles=[];
 
-  if(this.value === "single"){
-    isSingle = true;
-    createInputs(1);
-  } else {
-    isSingle = false;
+  if(this.value==="single"){
+    isSingle=true;
+    createInputs(1,true); // ✅ no Week label
+  }else{
+    isSingle=false;
   }
 };
 
-weekCount.onchange = function(){
-  createInputs(parseInt(this.value));
+weekCount.onchange=function(){
+  createInputs(parseInt(this.value),false);
 };
 
-function createInputs(count){
+function createInputs(count,isSingleMode=false){
   fileContainer.innerHTML='';
-  uploadedFiles = new Array(count).fill(null);
+  uploadedFiles=new Array(count).fill(null);
 
   for(let i=0;i<count;i++){
     let div=document.createElement('div');
-    div.innerHTML=`Week ${i+1}: <input type="file">`;
+
+    // ✅ FIX: remove "Week" word in single mode
+    if(isSingleMode){
+      div.innerHTML=`<input type="file">`;
+    }else{
+      div.innerHTML=`Week ${i+1}: <input type="file">`;
+    }
 
     div.querySelector('input').onchange=e=>{
       uploadedFiles[i]=e.target.files[0];
@@ -274,42 +245,51 @@ function createInputs(count){
   }
 }
 
-// HEADER
+// ✅ HEADER
 function createHeader(){
   headerRow.innerHTML='';
-  if(!isSingle) headerRow.innerHTML+='<th>Week</th>';
-  stageOrder.forEach(s=>headerRow.innerHTML+=`<th>${s}</th>`);
+
+  if(!isSingle){
+    headerRow.innerHTML+='<th>Week</th>';
+  }
+
+  stageOrder.forEach(s=>{
+    headerRow.innerHTML+=`<th>${s}</th>`;
+  });
+
   headerRow.innerHTML+='<th>TOTAL</th>';
 }
 
-// FORMAT
+// ✅ FORMAT
 function format(sec){
   let h=Math.floor(sec/3600);
   let m=Math.floor((sec%3600)/60);
   let s=Math.floor(sec%60);
+
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
-// CALCULATE
-calculateBtn.onclick = async function(){
+// ✅ CALCULATE
+calculateBtn.onclick=async function(){
 
-  if(uploadedFiles.length===0) return;
+  if(uploadedFiles.length===0)return;
 
   loadingOverlay.classList.add("show");
 
   let buffers=[];
+
   for(let i=0;i<uploadedFiles.length;i++){
     buffers.push(await uploadedFiles[i].arrayBuffer());
 
-    let progress=((i+1)/uploadedFiles.length)*100;
-    progressBar.style.width = progress+"%";
+    let p=((i+1)/uploadedFiles.length)*100;
+    progressBar.style.width=p+"%";
   }
 
   worker.postMessage({buffers});
 };
 
-// RECEIVE
-worker.onmessage = function(e){
+// ✅ RECEIVE
+worker.onmessage=function(e){
 
   loadingOverlay.classList.remove("show");
 
@@ -318,6 +298,7 @@ worker.onmessage = function(e){
   bodyRow.innerHTML='';
   createHeader();
 
+  let all=[];
   let chartData=[];
 
   results.forEach((r,i)=>{
@@ -325,41 +306,91 @@ worker.onmessage = function(e){
     let total=0;
     let row="<tr>";
 
-    if(!isSingle) row+=`<td class="week">${i+1}</td>`;
+    if(!isSingle){
+      row+=`<td class="week">${i+1}</td>`;
+    }
+
+    let weekAvg={};
 
     stageOrder.forEach(s=>{
-      let avg=r.dur[s]? r.dur[s]/r.cnt[s] : 0;
-      total+=avg;
-      row+=`<td>${format(avg)}</td>`;
+      let avg=r.dur[s]?r.dur[s]/r.cnt[s]:0;
+
+      if(avg>0){
+        total+=avg;
+        row+=`<td>${format(avg)}</td>`;
+      }else{
+        row+="<td>N/A</td>";
+      }
+
+      weekAvg[s]=avg;
       chartData.push(avg);
     });
 
     row+=`<td class="total">${format(total)}</td></tr>`;
     bodyRow.innerHTML+=row;
+
+    all.push(weekAvg);
   });
+
+  // ✅ ADD ALL FILES ROW
+  if(!isSingle && results.length>1){
+    addAverageRow(all);
+  }
 
   drawChart(chartData);
 };
 
-// CHART
+// ✅ ALL FILES ROW
+function addAverageRow(all){
+
+  let row="<tr><td class='week'>All Files</td>";
+  let total=0;
+
+  stageOrder.forEach(stage=>{
+
+    let sum=0,count=0;
+
+    all.forEach(w=>{
+      if(w[stage]>0){
+        sum+=w[stage];
+        count++;
+      }
+    });
+
+    let avg=count?sum/count:0;
+
+    if(avg>0){
+      total+=avg;
+      row+=`<td>${format(avg)}</td>`;
+    }else{
+      row+="<td>N/A</td>";
+    }
+  });
+
+  row+=`<td class="total">${format(total)}</td></tr>`;
+  bodyRow.innerHTML+=row;
+}
+
+// ✅ CHART
 function drawChart(data){
-  new Chart(document.getElementById('chart'), {
+
+  new Chart(document.getElementById('chart'),{
     type:'bar',
     data:{
-      labels: stageOrder,
+      labels:stageOrder,
       datasets:[{
         label:'Average Time',
-        data: data.slice(0,stageOrder.length),
+        data:data.slice(0,stageOrder.length),
         backgroundColor:'#0078d4'
       }]
     }
   });
 }
 
-// EXPORT
+// ✅ EXPORT
 function exportExcel(){
-  let wb = XLSX.utils.table_to_book(document.querySelector("table"));
-  XLSX.writeFile(wb, "CycleTime.xlsx");
+  let wb=XLSX.utils.table_to_book(document.querySelector("table"));
+  XLSX.writeFile(wb,"CycleTime.xlsx");
 }
 
 </script>
