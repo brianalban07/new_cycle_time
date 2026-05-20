@@ -5,205 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cycle Time Dashboard</title>
 
-<!-- ✅ Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{box-sizing:border-box;}
-
-body{
-  margin:0;
-  font-family:Segoe UI;
-  display:flex;
-  background:#f4f6f9;
-}
-
-/* ✅ SIDEBAR */
-.sidebar{
-  width:230px;
-  background:#1e293b;
-  color:#fff;
-  height:100vh;
-  padding:20px;
-}
-
-.sidebar h2{margin-bottom:20px;}
-
-/* ✅ MAIN */
-.main{
-  flex:1;
-  display:flex;
-  justify-content:center;
-}
-
-.content{
-  width:100%;
-  max-width:1100px;
-  padding:20px;
-}
-
-/* ✅ CARD */
-.card{
-  background:#fff;
-  padding:20px;
-  border-radius:10px;
-  margin-bottom:20px;
-  overflow-x:auto;
-}
-
-/* ✅ HIDDEN */
 .hidden{display:none;}
-
-/* ✅ CONTROLS */
-.controls{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-select,input{
-  padding:8px;
-  border-radius:5px;
-  border:1px solid #ccc;
-}
-
-/* ✅ BUTTON */
-button{
-  padding:10px 18px;
-  background:#0078d4;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-/* ✅ TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:900px;
-}
-
-th,td{
-  border:1px solid #ddd;
-  padding:6px;
-  text-align:center;
-}
-
-th{background:#333;color:#fff;}
-.week{background:#ffd966;}
-.total{background:#28a745;color:#fff;}
-
-/* ✅ PROGRESS */
-.progress{
-  width:100%;
-  height:10px;
-  background:#ccc;
-  border-radius:5px;
-  margin-top:10px;
-}
-
-.progress-bar{
-  height:100%;
-  width:0%;
-  background:#28a745;
-}
-
-/* ✅ LOADING */
-#loadingOverlay{
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  color:#fff;
-}
-
-#loadingOverlay.show{display:flex;}
-
-.spinner{
-  border:5px solid #ccc;
-  border-top:5px solid #0078d4;
-  border-radius:50%;
-  width:50px;
-  height:50px;
-  animation:spin 1s linear infinite;
-}
-
-@keyframes spin{100%{transform:rotate(360deg);}}
-
-/* ✅ Responsive */
-@media(max-width:900px){
-  body{flex-direction:column;}
-  .sidebar{width:100%;height:auto;}
-  table{min-width:700px;}
-}
 </style>
 </head>
 
 <body>
 
-<!-- ✅ SIDEBAR -->
-<div class="sidebar">
-  <h2>Dashboard</h2>
-  <button onclick="exportExcel()">Export</button>
-</div>
+<select id="modeSelect">
+  <option value="">Select Mode</option>
+  <option value="single">Single</option>
+  <option value="multiple">Multiple</option>
+</select>
 
-<!-- ✅ MAIN -->
-<div class="main">
-<div class="content">
-
-<!-- ✅ FORM -->
-<div class="card">
-<h2>Cycle Time Analyzer</h2>
-
-<div class="controls">
-  <select id="modeSelect">
-    <option value="">Select Mode</option>
-    <option value="single">Single</option>
-    <option value="multiple">Multiple</option>
-  </select>
-
-  <!-- ✅ Hidden initially -->
-  <input type="number" id="weekCount" class="hidden" placeholder="No. of Weeks">
-</div>
+<input type="number" id="weekCount" class="hidden" placeholder="No. of Weeks">
 
 <div id="fileContainer"></div>
-
 <button id="calculateBtn">Calculate</button>
 
-<div class="progress">
-  <div id="progressBar" class="progress-bar"></div>
+<div id="chartCard" class="hidden">
+  <h3>Stage Trend</h3>
+  <canvas id="chart"></canvas>
 </div>
 
-</div>
-
-<!-- ✅ CHART (HIDDEN FIRST) -->
-<div id="chartCard" class="card hidden">
-<h3>Stage Trend</h3>
-<canvas id="chart"></canvas>
-</div>
-
-<!-- ✅ TABLE -->
-<div class="card">
 <table>
 <thead><tr id="headerRow"></tr></thead>
 <tbody id="bodyRow"></tbody>
 </table>
-</div>
 
-</div>
-</div>
-
-<!-- ✅ LOADING -->
-<div id="loadingOverlay">
-  <div class="spinner"></div>
-  <div>Processing... please wait</div>
-</div>
+<div id="loadingOverlay" class="hidden">Processing...</div>
 
 <script>
 
@@ -213,7 +46,13 @@ let uploadedFiles=[];
 let worker=new Worker('./fileWorker.js');
 let isSingle=false;
 
-// ✅ MODE CHANGE
+// ✅ FORCE HIDE ON LOAD
+window.onload = function(){
+  weekCount.classList.add("hidden");
+  chartCard.classList.add("hidden");
+};
+
+// ✅ MODE
 modeSelect.onchange=function(){
 
   fileContainer.innerHTML='';
@@ -221,11 +60,12 @@ modeSelect.onchange=function(){
 
   if(this.value==="single"){
     isSingle=true;
-    weekCount.classList.add("hidden"); ✅ hide
+    weekCount.classList.add("hidden");
     createInputs(1,true);
-  }else if(this.value==="multiple"){
+  }
+  else if(this.value==="multiple"){
     isSingle=false;
-    weekCount.classList.remove("hidden"); ✅ show
+    weekCount.classList.remove("hidden");
   }
 };
 
@@ -276,13 +116,12 @@ calculateBtn.onclick=async function(){
 
   if(uploadedFiles.length===0)return;
 
-  loadingOverlay.classList.add("show");
+  loadingOverlay.classList.remove("hidden");
 
   let buffers=[];
 
-  for(let i=0;i<uploadedFiles.length;i++){
-    buffers.push(await uploadedFiles[i].arrayBuffer());
-    progressBar.style.width=((i+1)/uploadedFiles.length*100)+"%";
+  for(let f of uploadedFiles){
+    buffers.push(await f.arrayBuffer());
   }
 
   worker.postMessage({buffers});
@@ -291,7 +130,7 @@ calculateBtn.onclick=async function(){
 // RECEIVE
 worker.onmessage=function(e){
 
-  loadingOverlay.classList.remove("show");
+  loadingOverlay.classList.add("hidden");
 
   const {results}=e.data;
 
@@ -307,13 +146,15 @@ worker.onmessage=function(e){
     let row="<tr>";
 
     if(!isSingle){
-      row+=`<td class="week">${i+1}</td>`;
+      row+=`<td>${i+1}</td>`;
     }
 
     let weekAvg={};
 
     stageOrder.forEach(s=>{
-      let avg=r.dur[s]?r.dur[s]/r.cnt[s]:0;
+
+      // ✅ FIXED ERROR HERE
+      let avg = r.dur[s] ? r.dur[s] / r.cnt[s] : 0;
 
       if(avg>0){
         total+=avg;
@@ -326,16 +167,14 @@ worker.onmessage=function(e){
       chartData.push(avg);
     });
 
-    row+=`<td class="total">${format(total)}</td></tr>`;
+    row+=`<td>${format(total)}</td></tr>`;
     bodyRow.innerHTML+=row;
 
     all.push(weekAvg);
   });
 
-  // ✅ show chart after compute
   chartCard.classList.remove("hidden");
 
-  // ✅ ALL FILES ROW
   if(!isSingle && results.length>1){
     addAverageRow(all);
   }
@@ -345,10 +184,12 @@ worker.onmessage=function(e){
 
 // AVERAGE ROW
 function addAverageRow(all){
-  let row="<tr><td class='week'>All Files</td>";
+
+  let row="<tr><td>All Files</td>";
   let total=0;
 
   stageOrder.forEach(stage=>{
+
     let sum=0,count=0;
 
     all.forEach(w=>{
@@ -368,7 +209,7 @@ function addAverageRow(all){
     }
   });
 
-  row+=`<td class="total">${format(total)}</td></tr>`;
+  row+=`<td>${format(total)}</td></tr>`;
   bodyRow.innerHTML+=row;
 }
 
@@ -381,17 +222,10 @@ function drawChart(data){
       labels:stageOrder,
       datasets:[{
         label:'Average Time',
-        data:data.slice(0,stageOrder.length),
-        backgroundColor:'#0078d4'
+        data:data.slice(0,stageOrder.length)
       }]
     }
   });
-}
-
-// EXPORT
-function exportExcel(){
-  let wb=XLSX.utils.table_to_book(document.querySelector("table"));
-  XLSX.writeFile(wb,"CycleTime.xlsx");
 }
 
 </script>
